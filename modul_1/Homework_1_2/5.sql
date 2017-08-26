@@ -1,19 +1,9 @@
-USE `db_developers`;
-
-CREATE TEMPORARY TABLE `profit_company`
-SELECT `companies`.`name_company` AS 'Company name', `customers`.`name_customer` AS 'Customer name', sum(`projects`.`cost`)  AS   'Profit of the company'
-FROM `projects`
-JOIN `order` ON `projects`.`project_id`=`order`.`project_id`
-JOIN `customers` ON `customers`.`customer_id`=`order`.`customer_id`
-JOIN `companies` ON `companies`.`company_id`=`order`.`company_id`
-GROUP BY `Company name`,`Customer name`;
-
-CREATE TEMPORARY TABLE `min_profit_company`
-SELECT `Company name` AS 'Company name', min(`Profit of the company`) AS 'Minimum'
-FROM `profit_company`
-GROUP BY `Company name`;
-
-SELECT `profit_company`.`Customer name`, `profit_company`.`Company name`, `profit_company`.`Profit of the company`
-FROM `profit_company`
-JOIN `min_profit_company` ON `profit_company`.`Profit of the company`= `min_profit_company`.`Minimum`
-AND `profit_company`.`Company name`= `min_profit_company`.`Company name`;
+select q.`name_company` AS 'Company name', min(S) AS 'Minimum', q.`name_customer` AS 'Customer name'
+from(select co.`name_company`, sum(pr.`cost`) as S, cu.`name_customer`
+	from `db_developers`.`projects` pr
+    inner join `db_developers`.`order` ord on pr.`project_id`=ord.`project_id`
+    inner join `db_developers`.`customers` cu on cu.`customer_id`=ord.`customer_id` 
+	inner join `db_developers`.`companies` co on co.`company_id`=ord.`company_id`
+	group by co.`name_company`,cu.`name_customer`
+    order by S) q
+group by q.`name_company`
